@@ -78,7 +78,6 @@ class PluginMojoSpec extends Specification {
 
         then:
         1 * log.info("dependency-tree is fully explicit")
-
     }
 
     class TestPluginMojo extends PluginMojo {
@@ -111,4 +110,5 @@ class PluginMojoSpec extends Specification {
             }
         }
     }
+
 }

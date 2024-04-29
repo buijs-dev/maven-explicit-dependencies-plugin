@@ -57,14 +57,14 @@ public class PluginMojo extends AbstractMojo {
 
         if(dependenciesMissing.isEmpty()) {
             getLog().info("dependency-tree is fully explicit");
-        } else if(!force) {
-            getLog().warn("missing explicit dependencies: " + dependenciesMissing);
         } else {
-            throw new PluginException(dependenciesMissing,
-                    "missing explicit dependencies",
-                    "fix this error by adding all missing dependencies to your pom explicitly");
+            getLog().warn("missing explicit dependencies: " + dependenciesMissing);
+            if(force) {
+                var msg =  "missing explicit dependencies";
+                var description = "fix this error by adding all missing dependencies to your pom explicitly";
+                throw new PluginException(dependenciesMissing, msg, description);
+            }
         }
-
     }
 
 }
