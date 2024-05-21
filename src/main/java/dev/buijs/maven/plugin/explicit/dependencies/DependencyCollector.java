@@ -27,43 +27,44 @@ import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.project.MavenProject;
 
 /**
- * Utility to collect all dependencies currently used in this project.
- * The output is stored as JSON in file.
+ * Utility to collect all dependencies currently used in this project. The output is stored as JSON
+ * in file.
+ *
  * @see DependencyCollector#JSON_FILENAME
  * @see DependencyCollector#getDependencies()
  */
 class DependencyCollector {
 
-    /**
-     * The name of the JSON file which will be created after collecting the dependencies.
-     *
-     * @see DependencyCollector#getDependencies()
-     * @see DependencyWriter
-     */
-    private static final String JSON_FILENAME = "dependencies.json";
+  /**
+   * The name of the JSON file which will be created after collecting the dependencies.
+   *
+   * @see DependencyCollector#getDependencies()
+   * @see DependencyWriter
+   */
+  private static final String JSON_FILENAME = "dependencies.json";
 
-    /**
-     * The project (pom.xml) file to analyze.
-     * <p>
-     *     The collector will include everything from both sections {@code <dependencyManagement/>} and {@code <dependencies/>}.
-     * </p>
-     */
-    private final MavenProject project;
+  /**
+   * The project (pom.xml) file to analyze.
+   *
+   * <p>The collector will include everything from both sections {@code <dependencyManagement/>} and
+   * {@code <dependencies/>}.
+   */
+  private final MavenProject project;
 
-    /**
-     * The converter to create DependencyRecord's from org.apache.maven.model.Dependency.
-     * <br/>
-     * @see DependencyRecord
-     * @see DependencyRecordConverter
-     */
+  /**
+   * The converter to create DependencyRecord's from org.apache.maven.model.Dependency. <br>
+   *
+   * @see DependencyRecord
+   * @see DependencyRecordConverter
+   */
   private final DependencyRecordConverter recordFactory;
 
-    /**
-     * The writer to store dependencies information in JSON file.
-     * <br/>
-     * @see DependencyWriter
-     * @see DependencyCollector#JSON_FILENAME
-     */
+  /**
+   * The writer to store dependencies information in JSON file. <br>
+   *
+   * @see DependencyWriter
+   * @see DependencyCollector#JSON_FILENAME
+   */
   private final DependencyWriter writer;
 
   DependencyCollector(
@@ -75,13 +76,14 @@ class DependencyCollector {
     this.writer = writer;
   }
 
-    /**
-     * Collect all dependencies currently used in this project.
-     * @return Set of DependencyRecord.
-     * @throws PluginException when collecting the dependencies has failed.
-     * @see DependencyRecord
-     * @see DependencyRecordConverter
-     */
+  /**
+   * Collect all dependencies currently used in this project.
+   *
+   * @return Set of DependencyRecord.
+   * @throws PluginException when collecting the dependencies has failed.
+   * @see DependencyRecord
+   * @see DependencyRecordConverter
+   */
   protected Set<DependencyRecord> getDependencies() throws PluginException {
     var dependenciesDirect = project.getDependencies();
 

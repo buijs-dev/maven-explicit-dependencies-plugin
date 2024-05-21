@@ -20,10 +20,9 @@
  */
 package dev.buijs.maven.plugin.explicit.dependencies;
 
+import java.util.List;
 import org.apache.maven.shared.dependency.graph.DependencyNode;
 import org.apache.maven.shared.dependency.graph.traversal.DependencyNodeVisitor;
-
-import java.util.List;
 
 class DependencyTreeNodeVisitor implements DependencyNodeVisitor {
 

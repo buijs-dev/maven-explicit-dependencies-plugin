@@ -21,46 +21,24 @@
 package dev.buijs.maven.plugin.explicit.dependencies;
 
 import java.util.regex.Pattern;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Data class for storing dependency information.
+ *
  * @param groupId the dependency groupId (com.example).
  * @param artifactId the dependency artifactId (library-foo).
- * @param version the dependency version (format major.minor.patch 1.0.0 or with suffix 1.0.0-SNAPSHOT etc.)
+ * @param version the dependency version (format major.minor.patch 1.0.0 or with suffix
+ *     1.0.0-SNAPSHOT etc.)
  */
-public record DependencyRecord(String groupId,
-                               String artifactId,
-                               String version)
-        implements Comparable<DependencyRecord> {
+public record DependencyRecord(String groupId, String artifactId, String version)
+    implements Comparable<DependencyRecord> {
 
   /**
-   * Serialization template to store the information as JSON.
-   * @see DependencyRecord#toString()
-   */
-  private static final String JSON_TEMPLATE =
-      """
-        {
-        "groupId": "%s",
-        "artifactId": "%s",
-        "version": "%s"
-        }""";
-
-  /**
-   * Regex pattern to check if a dependency uses a semantic version.
-   * @see DependencyRecord#compareTo
-   */
-  private static final Pattern SEMANTIC_VERSION_PATTERN =
-          Pattern.compile("^(?<version>\\d+\\.\\d+.\\d+)(?<suffix>.*)$");
-
-  /**
-   * Compare logic to order a collection of records
-   * alphabetically and then from newest to oldest version.
-   * <br/>
-   * Versions without suffix are preferred.
-   * E.g. when comparing 1.0.2 and 1.0.2-SNAPSHOT,
-   * 1.0.2 is given a higher priority than 1.0.2-SNAPSHOT.
+   * Compare logic to order a collection of records alphabetically and then from newest to oldest
+   * version. <br/>
+   * @see DependencyRecord.INNER#compareByVersion(String, String)
    * @param other the object to be compared.
-   * <br/>
    * @return int (negative) number of priority.
    */
   @Override
@@ -75,41 +53,103 @@ public record DependencyRecord(String groupId,
       return artifactCompare;
     }
 
-    var thisVersionMatcher = SEMANTIC_VERSION_PATTERN.matcher(this.version);
-    var thisIsSemanticallyVersioned = thisVersionMatcher.find();
-    if(!thisIsSemanticallyVersioned) {
-      return other.version.compareTo(this.version);
-    }
-
-    var otherVersionMatcher = SEMANTIC_VERSION_PATTERN.matcher(other.version);
-    var otherIsSemanticallyVersioned = otherVersionMatcher.find();
-    if(!otherIsSemanticallyVersioned) {
-      return other.version.compareTo(this.version);
-    }
-
-    var thisVersionWithoutSuffix = thisVersionMatcher.group("version");
-    var otherVersionWithoutSuffix = otherVersionMatcher.group("version");
-    var versionComparison = otherVersionWithoutSuffix.compareTo(thisVersionWithoutSuffix);
-    if(versionComparison != 0) {
-      return versionComparison;
-    }
-
-    var thisSuffixOrNull = thisVersionMatcher.group("suffix");
-    if(thisSuffixOrNull.isEmpty()) {
-      return other.version.compareTo(thisVersionWithoutSuffix);
-    }
-
-    var otherSuffixOrNull = otherVersionMatcher.group("suffix");
-    if(otherSuffixOrNull.isEmpty()) {
-      return this.version.compareTo(otherVersionWithoutSuffix);
-    }
-
-    return otherSuffixOrNull.compareTo(thisSuffixOrNull);
+    return INNER.compareByVersion(this.version, other.version);
   }
 
   @Override
   public String toString() {
-    return JSON_TEMPLATE.formatted(groupId, artifactId, version);
+    return INNER.toJson(this);
+  }
+
+  // Inner static class is used to hide the details from the record instance.
+  private static class INNER {
+    /**
+     * Serialization template to store the information as JSON.
+     *
+     * @see DependencyRecord#toString()
+     */
+    private static final String JSON_TEMPLATE =
+        """
+              {
+              "groupId": "%s",
+              "artifactId": "%s",
+              "version": "%s"
+              }""";
+
+    /**
+     * Name of the first regex group.
+     *
+     * @see DependencyRecord.INNER#SEMANTIC_VERSION_PATTERN
+     */
+    private static final String SEMANTIC_VERSION_PATTERN_GROUP_VERSION = "version";
+
+    /**
+     * Name of the second regex group.
+     *
+     * @see DependencyRecord.INNER#SEMANTIC_VERSION_PATTERN
+     */
+    private static final String SEMANTIC_VERSION_PATTERN_GROUP_SUFFIX = "suffix";
+
+    /**
+     * Regex pattern to check if a dependency uses a semantic version.
+     *
+     * @see DependencyRecord#compareTo
+     */
+    private static final Pattern SEMANTIC_VERSION_PATTERN =
+        Pattern.compile(
+            "^(?<"
+                + SEMANTIC_VERSION_PATTERN_GROUP_VERSION
+                + ">\\d+\\.\\d+.\\d+)(?<"
+                + SEMANTIC_VERSION_PATTERN_GROUP_SUFFIX
+                + ">.*)$");
+
+    /**
+     * Compare two dependency versions where the newest version has higher priority.
+     * Versions without suffix are preferred.
+     * E.g. when comparing 1.0.2 and 1.0.2-SNAPSHOT, 1.0.2 is given a higher priority than 1.0.2-SNAPSHOT.
+     * @see DependencyRecord#compareTo
+     */
+    private static int compareByVersion(@NotNull String thisVersion,
+                                        @NotNull String otherVersion) {
+      var thisVersionMatcher = INNER.SEMANTIC_VERSION_PATTERN.matcher(thisVersion);
+      var thisIsSemanticallyVersioned = thisVersionMatcher.find();
+      if (!thisIsSemanticallyVersioned) {
+        return thisVersion.compareTo(otherVersion);
+      }
+
+      var otherVersionMatcher = INNER.SEMANTIC_VERSION_PATTERN.matcher(otherVersion);
+      var otherIsSemanticallyVersioned = otherVersionMatcher.find();
+      if (!otherIsSemanticallyVersioned) {
+        return thisVersion.compareTo(otherVersion);
+      }
+
+      var thisVersionWithoutSuffix =
+              thisVersionMatcher.group(SEMANTIC_VERSION_PATTERN_GROUP_VERSION);
+
+      var otherVersionWithoutSuffix =
+          otherVersionMatcher.group(SEMANTIC_VERSION_PATTERN_GROUP_VERSION);
+
+      var versionComparison = otherVersionWithoutSuffix.compareTo(thisVersionWithoutSuffix);
+      if (versionComparison != 0) {
+        return versionComparison;
+      }
+
+      var thisSuffixOrNull = thisVersionMatcher.group(SEMANTIC_VERSION_PATTERN_GROUP_SUFFIX);
+      if (thisSuffixOrNull.isEmpty()) {
+        return otherVersion.compareTo(thisVersionWithoutSuffix);
+      }
+
+      var otherSuffixOrNull = otherVersionMatcher.group(SEMANTIC_VERSION_PATTERN_GROUP_SUFFIX);
+      if (otherSuffixOrNull.isEmpty()) {
+        return thisVersion.compareTo(otherVersionWithoutSuffix);
+      }
+
+      return otherSuffixOrNull.compareTo(thisSuffixOrNull);
+    }
+
+    private static String toJson(@NotNull DependencyRecord record) {
+      return JSON_TEMPLATE.formatted(record.groupId, record.artifactId, record.version);
+    }
   }
 
 }

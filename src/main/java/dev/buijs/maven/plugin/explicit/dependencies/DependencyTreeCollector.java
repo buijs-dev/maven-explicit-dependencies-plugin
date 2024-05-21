@@ -41,6 +41,7 @@ class DependencyTreeCollector {
   private final DependencyGraphBuilder graphBuilder;
   private final DependencyRecordConverter recordFactory;
   private final DependencyWriter writer;
+
   DependencyTreeCollector(
       final MavenProject project,
       final MavenSession session,

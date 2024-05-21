@@ -27,25 +27,26 @@ import java.util.stream.Collectors;
 /**
  * Utility to find all transitive dependencies which are not explicitly added to the maven project.
  * The output is stored as JSON in file.
+ *
  * @see DependencyAnalyzer#JSON_FILENAME
  * @see DependencyAnalyzer#getMissingExplicitDependencies(Set, Set)
  */
 public class DependencyAnalyzer {
 
-    /**
-     * The name of the JSON file which will be created after collecting the dependencies.
-     *
-     * @see DependencyCollector#getDependencies()
-     * @see DependencyWriter
-     */
-    private static final String JSON_FILENAME = "dependenciesMissing.json";
+  /**
+   * The name of the JSON file which will be created after collecting the dependencies.
+   *
+   * @see DependencyCollector#getDependencies()
+   * @see DependencyWriter
+   */
+  private static final String JSON_FILENAME = "dependenciesMissing.json";
 
-    /**
-     * The writer to store dependencies information in JSON file.
-     * <br/>
-     * @see DependencyWriter
-     * @see DependencyAnalyzer#JSON_FILENAME
-     */
+  /**
+   * The writer to store dependencies information in JSON file.
+   *
+   * @see DependencyWriter
+   * @see DependencyAnalyzer#JSON_FILENAME
+   */
   private final DependencyWriter writer;
 
   DependencyAnalyzer(DependencyWriter writer) {
@@ -55,7 +56,7 @@ public class DependencyAnalyzer {
   /**
    * Compare the explicitly configured dependencies with the dependency-tree and return all
    * transitive dependencies that are not explicitly added.
-   * <br/>
+   *
    * @param explicitDependencies Set of DependencyRecord containing all dependencies from maven pom
    *     dependencies and dependencyManagement.
    * @param implicitDependencies Set of DependencyRecord containing all dependencies from the
@@ -63,8 +64,9 @@ public class DependencyAnalyzer {
    * @return Set of DependencyRecord containing all transitive dependencies that are not explicitly
    *     added to the maven pom.
    */
-  Set<DependencyRecord> getMissingExplicitDependencies(Set<DependencyRecord> explicitDependencies,
-                                                       Set<DependencyRecord> implicitDependencies) throws PluginException {
+  Set<DependencyRecord> getMissingExplicitDependencies(
+      Set<DependencyRecord> explicitDependencies, Set<DependencyRecord> implicitDependencies)
+      throws PluginException {
     var dependencies =
         implicitDependencies.stream()
             .filter(dependency -> !explicitDependencies.contains(dependency))
