@@ -24,8 +24,10 @@ import org.apache.maven.execution.MavenSession
 import org.apache.maven.model.Build
 import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
+import org.apache.maven.project.ProjectBuildingRequest
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder
 import org.apache.maven.shared.dependency.graph.DependencyNode
+import org.apache.maven.shared.dependency.graph.traversal.DependencyNodeVisitor
 import spock.lang.Specification
 
 import java.nio.file.Files
@@ -37,24 +39,25 @@ class PluginMojoSpec extends Specification {
         def project = projectStub
         def session = Stub(MavenSession)
         def graphBuilder = Stub(DependencyGraphBuilder) {
-            it.buildDependencyGraph(_, null) >> Stub(DependencyNode) {
-                it.accept(_) >> {
-                    // Multiple visitor passes so check first if this is the correct one
+            it.buildDependencyGraph(_ as ProjectBuildingRequest, null) >> Stub(DependencyNode) {
+                it.accept(_ as DependencyNodeVisitor) >> {
+                    //multiple visitor passes, so need to check if this is the correct one
+                    //noinspection GroovyAssignabilityCheck
                     def visitor = arguments[0].getDependencyNodeVisitor()
-                    if(visitor instanceof DependencyTreeNodeVisitor) {
-                        visitor.collection.add(
-                                new DependencyRecord("foo.groupie", "bar", "1.2.3"))
+                    if (visitor instanceof DependencyTreeNodeVisitor) {
+                        def record = new DependencyRecord("foo.groupie", "bar", "1.2.3")
+                        //noinspection GroovyAccessibility
+                        visitor.collection.add(record)
                     }
                 }
             }
         }
-        def force = true
-        def mojo = new PluginMojo(
-                project: project,
+
+        and:
+        def mojo = new PluginMojo(project: project,
                 session: session,
                 dependencyGraphBuilder: graphBuilder,
-                force: force
-        )
+                force: true)
 
         when:
         mojo.execute()
@@ -80,7 +83,11 @@ class PluginMojoSpec extends Specification {
         1 * log.info("dependency-tree is fully explicit")
     }
 
-    class TestPluginMojo extends PluginMojo {
+    // Test Class for easier mocking/stubbing.
+    static class TestPluginMojo extends PluginMojo {
+
+        Log log
+
         TestPluginMojo(Log log,
                        MavenProject project,
                        MavenSession session,
@@ -92,8 +99,6 @@ class PluginMojoSpec extends Specification {
             super.force = force
             this.log = log
         }
-
-        Log log
 
         @Override
         Log getLog() {

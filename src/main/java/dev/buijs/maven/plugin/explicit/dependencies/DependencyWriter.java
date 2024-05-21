@@ -20,46 +20,45 @@
  */
 package dev.buijs.maven.plugin.explicit.dependencies;
 
-import org.apache.maven.project.MavenProject;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.apache.maven.project.MavenProject;
 
 public class DependencyWriter {
 
-    DependencyWriter(MavenProject project) {
-        this.project = project;
+  private final MavenProject project;
+
+  DependencyWriter(MavenProject project) {
+    this.project = project;
+  }
+
+  void writeNewFile(final String filename, final Object content) throws PluginException {
+    var json = getLogDirectory().resolve(filename).toAbsolutePath();
+
+    try {
+      //noinspection ResultOfMethodCallIgnored
+      json.toFile().createNewFile();
+      Files.writeString(json, content.toString());
+    } catch (IOException e) {
+      throw new PluginException(e, "failed to write log files", "");
+    }
+  }
+
+  private Path getLogDirectory() throws PluginException {
+    var dir = getBuildDirectory().resolve("maven-explicit-dependencies");
+    if (Files.exists(dir)) {
+      return dir;
     }
 
-    private final MavenProject project;
-
-    void writeNewFile(final String filename, final Object content) throws PluginException {
-        var json = getLogDirectory().resolve(filename).toAbsolutePath();
-
-        try {
-            //noinspection ResultOfMethodCallIgnored
-            json.toFile().createNewFile();
-            Files.writeString(json, content.toString());
-        } catch (IOException e) {
-            throw new PluginException(e, "failed to write log files", "");
-        }
+    try {
+      return Files.createDirectory(dir);
+    } catch (IOException e) {
+      throw new PluginException(e, "failed to create log directory", "");
     }
+  }
 
-    private Path getLogDirectory() throws PluginException {
-        var dir = getBuildDirectory().resolve("maven-explicit-dependencies");
-        if(Files.exists(dir)) {
-            return dir;
-        }
-
-        try {
-            return Files.createDirectory(dir);
-        } catch (IOException e) {
-            throw new PluginException(e, "failed to create log directory", "");
-        }
-    }
-
-    private Path getBuildDirectory() {
-        return Path.of(project.getBuild().getDirectory());
-    }
+  private Path getBuildDirectory() {
+    return Path.of(project.getBuild().getDirectory());
+  }
 }

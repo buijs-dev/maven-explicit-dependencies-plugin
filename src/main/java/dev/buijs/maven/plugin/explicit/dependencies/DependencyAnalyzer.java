@@ -25,34 +25,51 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Find all transitive dependencies which are not explicitly added to the maven project.
+ * Utility to find all transitive dependencies which are not explicitly added to the maven project.
+ * The output is stored as JSON in file.
+ * @see DependencyAnalyzer#JSON_FILENAME
+ * @see DependencyAnalyzer#getMissingExplicitDependencies(Set, Set)
  */
 public class DependencyAnalyzer {
 
-    DependencyAnalyzer(DependencyWriter writer) {
-        this.writer = writer;
-    }
-
-    private final DependencyWriter writer;
+    /**
+     * The name of the JSON file which will be created after collecting the dependencies.
+     *
+     * @see DependencyCollector#getDependencies()
+     * @see DependencyWriter
+     */
+    private static final String JSON_FILENAME = "dependenciesMissing.json";
 
     /**
-     * Compare the explicitly configured dependencies with the dependency-tree
-     * and return all transitive dependencies that are not explicitly added.
+     * The writer to store dependencies information in JSON file.
      * <br/>
-     * @param explicitDependencies Set of DependencyRecord containing all dependencies
-     *                             from maven pom dependencies and dependencyManagement.
-     * @param implicitDependencies Set of DependencyRecord containing all dependencies
-     *                             from the dependency-tree which includes all transitive dependencies.
-     * @return Set of DependencyRecord containing all transitive dependencies that are
-     * not explicitly added to the maven pom.
+     * @see DependencyWriter
+     * @see DependencyAnalyzer#JSON_FILENAME
      */
-    Set<DependencyRecord> getMissingExplicitDependencies(Set<DependencyRecord> explicitDependencies,
-                                                         Set<DependencyRecord> implicitDependencies) throws PluginException {
-        var dependencies = implicitDependencies.stream()
-                .filter(dependency -> !explicitDependencies.contains(dependency))
-                .collect(Collectors.toCollection(LinkedHashSet::new));
-        writer.writeNewFile("dependenciesMissing.json", dependencies);
-        return dependencies;
-    }
+  private final DependencyWriter writer;
 
+  DependencyAnalyzer(DependencyWriter writer) {
+    this.writer = writer;
+  }
+
+  /**
+   * Compare the explicitly configured dependencies with the dependency-tree and return all
+   * transitive dependencies that are not explicitly added.
+   * <br/>
+   * @param explicitDependencies Set of DependencyRecord containing all dependencies from maven pom
+   *     dependencies and dependencyManagement.
+   * @param implicitDependencies Set of DependencyRecord containing all dependencies from the
+   *     dependency-tree which includes all transitive dependencies.
+   * @return Set of DependencyRecord containing all transitive dependencies that are not explicitly
+   *     added to the maven pom.
+   */
+  Set<DependencyRecord> getMissingExplicitDependencies(Set<DependencyRecord> explicitDependencies,
+                                                       Set<DependencyRecord> implicitDependencies) throws PluginException {
+    var dependencies =
+        implicitDependencies.stream()
+            .filter(dependency -> !explicitDependencies.contains(dependency))
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+    writer.writeNewFile(JSON_FILENAME, dependencies);
+    return dependencies;
+  }
 }

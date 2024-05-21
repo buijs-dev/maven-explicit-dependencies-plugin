@@ -5,12 +5,14 @@
     <groupId>dev.buijs.maven</groupId>
     <artifactId>explicit-dependencies-maven-plugin</artifactId>
     <packaging>maven-plugin</packaging>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <name>explicit-dependencies-maven-plugin Maven Mojo</name>
     <description>Maven plugin to force transitive dependencies to be explicitly declared.</description>
     <url>https://github.com/buijs-dev/maven-explicit-dependencies-plugin</url>
     <scm>
         <url>https://github.com/buijs-dev/maven-explicit-dependencies-plugin</url>
+        <connection>scm:git:https://github.com/buijs-dev/maven-explicit-dependencies-plugin.git</connection>
+        <developerConnection>scm:git:ssh://github.com/buijs-dev/maven-explicit-dependencies-plugin.git</developerConnection>
     </scm>
     <licenses>
         <license>
@@ -19,6 +21,18 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
+    <developers>
+        <developer>
+            <name>Gillian Buijs</name>
+            <email>info@buijs.dev</email>
+        </developer>
+    </developers>
+    <distributionManagement>
+        <repository>
+            <id>repsy</id>
+            <url>https://repsy.io/mvn/buijs-dev/maven</url>
+        </repository>
+    </distributionManagement>
     <properties>
         <maven.compiler.target>17</maven.compiler.target>
         <maven.compiler.source>17</maven.compiler.source>
@@ -87,6 +101,13 @@
             <groupId>org.apache.groovy</groupId>
             <artifactId>groovy</artifactId>
             <version>4.0.21</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.groovy</groupId>
+            <artifactId>groovy-json</artifactId>
+            <version>4.0.21</version>
+            <scope>test</scope>
         </dependency>
         <!-- Test - mocking -->
         <dependency>
@@ -132,6 +153,33 @@
                         <include>**/*Spec.groovy</include>
                     </includes>
                 </configuration>
+            </plugin>
+            <!-- Java docs -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.2.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

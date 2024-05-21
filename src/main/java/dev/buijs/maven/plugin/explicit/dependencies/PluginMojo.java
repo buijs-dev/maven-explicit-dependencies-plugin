@@ -29,42 +29,41 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
 
-@Mojo(name="compile", defaultPhase = LifecyclePhase.COMPILE)
+@Mojo(name = "compile", defaultPhase = LifecyclePhase.COMPILE)
 public class PluginMojo extends AbstractMojo {
 
-    @Component
-    DependencyGraphBuilder dependencyGraphBuilder;
+  @Component DependencyGraphBuilder dependencyGraphBuilder;
 
-    @Parameter(defaultValue = "${session}", readonly = true)
-    MavenSession session;
+  @Parameter(defaultValue = "${session}", readonly = true)
+  MavenSession session;
 
-    @Parameter(defaultValue = "${project}", required = true, readonly = true)
-    MavenProject project;
+  @Parameter(defaultValue = "${project}", required = true, readonly = true)
+  MavenProject project;
 
-    @Parameter(property = "force", defaultValue = "true" )
-    Boolean force;
+  @Parameter(property = "force", defaultValue = "true")
+  Boolean force;
 
-    @Override
-    public void execute() throws PluginException {
-        var context = new PluginContext(project, session, dependencyGraphBuilder);
+  @Override
+  public void execute() throws PluginException {
+    var context = new PluginContext(project, session, dependencyGraphBuilder);
 
-        var dependencies = context.dependenciesCollector.getDependencies();
+    var dependencies = context.dependenciesCollector.getDependencies();
 
-        var dependencyTree = context.dependencyTreeCollector.getDependencies();
+    var dependencyTree = context.dependencyTreeCollector.getDependencies();
 
-        var dependenciesMissing = context.dependencyAnalyzer
-                .getMissingExplicitDependencies(dependencies, dependencyTree);
+    var dependenciesMissing =
+        context.dependencyAnalyzer.getMissingExplicitDependencies(dependencies, dependencyTree);
 
-        if(dependenciesMissing.isEmpty()) {
-            getLog().info("dependency-tree is fully explicit");
-        } else {
-            getLog().warn("missing explicit dependencies: " + dependenciesMissing);
-            if(force) {
-                var msg =  "missing explicit dependencies";
-                var description = "fix this error by adding all missing dependencies to your pom explicitly";
-                throw new PluginException(dependenciesMissing, msg, description);
-            }
-        }
+    if (dependenciesMissing.isEmpty()) {
+      getLog().info("dependency-tree is fully explicit");
+    } else {
+      getLog().warn("missing explicit dependencies: " + dependenciesMissing);
+      if (force) {
+        var msg = "missing explicit dependencies";
+        var description =
+            "fix this error by adding all missing dependencies to your pom explicitly";
+        throw new PluginException(dependenciesMissing, msg, description);
+      }
     }
-
+  }
 }

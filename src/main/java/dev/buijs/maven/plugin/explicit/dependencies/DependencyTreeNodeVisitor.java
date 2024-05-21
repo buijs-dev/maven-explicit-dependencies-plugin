@@ -27,23 +27,22 @@ import java.util.List;
 
 class DependencyTreeNodeVisitor implements DependencyNodeVisitor {
 
-    DependencyTreeNodeVisitor(List<DependencyRecord> collection,
-                              DependencyRecordFactory recordFactory) {
-        this.collection = collection;
-        this.recordFactory = recordFactory;
-    }
+  private final List<DependencyRecord> collection;
+  private final DependencyRecordConverter recordFactory;
 
-    private final List<DependencyRecord> collection;
-    private final DependencyRecordFactory recordFactory;
+  DependencyTreeNodeVisitor(
+      List<DependencyRecord> collection, DependencyRecordConverter recordFactory) {
+    this.collection = collection;
+    this.recordFactory = recordFactory;
+  }
 
-    public boolean visit(DependencyNode node) {
-        this.collection.add(recordFactory.create(node.getArtifact()));
-        return true;
-    }
+  public boolean visit(DependencyNode node) {
+    this.collection.add(recordFactory.create(node.getArtifact()));
+    return true;
+  }
 
-    @Override
-    public boolean endVisit(DependencyNode dependencyNode) {
-        return true;
-    }
-
+  @Override
+  public boolean endVisit(DependencyNode dependencyNode) {
+    return true;
+  }
 }

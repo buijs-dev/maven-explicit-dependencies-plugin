@@ -20,41 +20,84 @@
  */
 package dev.buijs.maven.plugin.explicit.dependencies;
 
-import org.apache.maven.project.MavenProject;
-
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.maven.model.DependencyManagement;
+import org.apache.maven.project.MavenProject;
 
+/**
+ * Utility to collect all dependencies currently used in this project.
+ * The output is stored as JSON in file.
+ * @see DependencyCollector#JSON_FILENAME
+ * @see DependencyCollector#getDependencies()
+ */
 class DependencyCollector {
-    DependencyCollector(final MavenProject project,
-                        final DependencyRecordFactory recordFactory,
-                        final DependencyWriter writer) {
-        this.project = project;
-        this.recordFactory = recordFactory;
-        this.writer = writer;
-    }
 
+    /**
+     * The name of the JSON file which will be created after collecting the dependencies.
+     *
+     * @see DependencyCollector#getDependencies()
+     * @see DependencyWriter
+     */
+    private static final String JSON_FILENAME = "dependencies.json";
+
+    /**
+     * The project (pom.xml) file to analyze.
+     * <p>
+     *     The collector will include everything from both sections {@code <dependencyManagement/>} and {@code <dependencies/>}.
+     * </p>
+     */
     private final MavenProject project;
-    private final DependencyRecordFactory recordFactory;
-    private final DependencyWriter writer;
 
-    protected Set<DependencyRecord> getDependencies() throws PluginException {
-        var dependenciesDirect =
-                project.getDependencies();
+    /**
+     * The converter to create DependencyRecord's from org.apache.maven.model.Dependency.
+     * <br/>
+     * @see DependencyRecord
+     * @see DependencyRecordConverter
+     */
+  private final DependencyRecordConverter recordFactory;
 
-        var dependenciesManaged =
-                project.getDependencyManagement().getDependencies();
+    /**
+     * The writer to store dependencies information in JSON file.
+     * <br/>
+     * @see DependencyWriter
+     * @see DependencyCollector#JSON_FILENAME
+     */
+  private final DependencyWriter writer;
 
-        var dependencies = Stream.of(dependenciesDirect, dependenciesManaged)
-                .flatMap(Collection::stream)
-                .map(recordFactory::create)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+  DependencyCollector(
+      final MavenProject project,
+      final DependencyRecordConverter recordFactory,
+      final DependencyWriter writer) {
+    this.project = project;
+    this.recordFactory = recordFactory;
+    this.writer = writer;
+  }
 
-        writer.writeNewFile("dependencies.json", dependencies);
-        return dependencies;
-    }
+    /**
+     * Collect all dependencies currently used in this project.
+     * @return Set of DependencyRecord.
+     * @throws PluginException when collecting the dependencies has failed.
+     * @see DependencyRecord
+     * @see DependencyRecordConverter
+     */
+  protected Set<DependencyRecord> getDependencies() throws PluginException {
+    var dependenciesDirect = project.getDependencies();
 
+    var dependenciesManaged =
+        Optional.of(project)
+            .map(MavenProject::getDependencyManagement)
+            .map(DependencyManagement::getDependencies)
+            .orElse(List.of());
+
+    var dependencies =
+        Stream.of(dependenciesDirect, dependenciesManaged)
+            .flatMap(Collection::stream)
+            .map(recordFactory::create)
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+
+    writer.writeNewFile(JSON_FILENAME, dependencies);
+    return dependencies;
+  }
 }

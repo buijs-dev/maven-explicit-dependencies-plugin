@@ -23,19 +23,15 @@ package dev.buijs.maven.plugin.explicit.dependencies;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Dependency;
 
-public class DependencyRecordFactory {
+public class DependencyRecordConverter {
 
-    DependencyRecord create(Artifact artifact) {
-        return new DependencyRecord(
-                artifact.getGroupId(),
-                artifact.getArtifactId(),
-                artifact.getVersion());
-    }
+  DependencyRecord create(Artifact artifact) {
+    return new DependencyRecord(
+        artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion());
+  }
 
-    DependencyRecord create(Dependency dependency) {
-        return new DependencyRecord(
-                dependency.getGroupId(),
-                dependency.getArtifactId(),
-                dependency.getVersion());
-    }
+  DependencyRecord create(Dependency dependency) {
+    return new DependencyRecord(
+        dependency.getGroupId(), dependency.getArtifactId(), dependency.getVersion());
+  }
 }

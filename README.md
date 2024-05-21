@@ -1,9 +1,17 @@
 # maven-explicit-dependencies-plugin
 Maven plugin to force transitive dependencies to be explicitly declared.
 
->**Unpublished plugin**: Checkout repository and run mvn install to use the plugin from mavenLocal.
-
 ## Usage
+Add the buijs-dev maven repository:
+```xml
+<pluginRepositories>
+    <pluginRepository>
+        <id>buijs-dev</id>
+        <url>https://repsy.io/mvn/buijs-dev/maven</url>
+    </pluginRepository>
+</pluginRepositories>
+```
+
 Add the plugin:
 ```xml
 <plugin>

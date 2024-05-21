@@ -23,7 +23,7 @@ package dev.buijs.maven.plugin.explicit.dependencies;
 import org.apache.maven.plugin.MojoExecutionException;
 
 public class PluginException extends MojoExecutionException {
-    public PluginException(Object source, String shortMessage, String longMessage) {
-        super(source, shortMessage, longMessage);
-    }
+  public PluginException(Object source, String shortMessage, String longMessage) {
+    super(source, shortMessage, longMessage);
+  }
 }

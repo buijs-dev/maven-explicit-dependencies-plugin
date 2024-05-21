@@ -26,28 +26,24 @@ import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
 
 public class PluginContext {
 
-    public PluginContext(MavenProject project,
-                         MavenSession session,
-                         DependencyGraphBuilder graphBuilder) {
+  final DependencyRecordConverter factory;
+  final DependencyWriter writer;
+  final DependencyCollector dependenciesCollector;
+  final DependencyTreeCollector dependencyTreeCollector;
+  final DependencyAnalyzer dependencyAnalyzer;
 
-        this.factory = new DependencyRecordFactory();
+  public PluginContext(
+      MavenProject project, MavenSession session, DependencyGraphBuilder graphBuilder) {
 
-        this.writer = new DependencyWriter(project);
+    this.factory = new DependencyRecordConverter();
 
-        this.dependencyAnalyzer = new DependencyAnalyzer(writer);
+    this.writer = new DependencyWriter(project);
 
-        this.dependenciesCollector =
-                new DependencyCollector(project, factory, writer);
+    this.dependencyAnalyzer = new DependencyAnalyzer(writer);
 
-        this.dependencyTreeCollector =
-                new DependencyTreeCollector(project, session, graphBuilder, factory, writer);
+    this.dependenciesCollector = new DependencyCollector(project, factory, writer);
 
-    }
-
-    final DependencyRecordFactory factory;
-    final DependencyWriter writer;
-    final DependencyCollector dependenciesCollector;
-    final DependencyTreeCollector dependencyTreeCollector;
-    final DependencyAnalyzer dependencyAnalyzer;
-
+    this.dependencyTreeCollector =
+        new DependencyTreeCollector(project, session, graphBuilder, factory, writer);
+  }
 }
