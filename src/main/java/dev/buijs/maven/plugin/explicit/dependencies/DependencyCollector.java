@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.project.MavenProject;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Utility to collect all dependencies currently used in this project. The output is stored as JSON
@@ -49,7 +50,7 @@ class DependencyCollector {
    * <p>The collector will include everything from both sections {@code <dependencyManagement/>} and
    * {@code <dependencies/>}.
    */
-  private final MavenProject project;
+  @NotNull private final MavenProject project;
 
   /**
    * The converter to create DependencyRecord's from org.apache.maven.model.Dependency. <br>
@@ -57,7 +58,7 @@ class DependencyCollector {
    * @see DependencyRecord
    * @see DependencyRecordConverter
    */
-  private final DependencyRecordConverter recordFactory;
+  @NotNull private final DependencyRecordConverter recordFactory;
 
   /**
    * The writer to store dependencies information in JSON file. <br>
@@ -65,14 +66,14 @@ class DependencyCollector {
    * @see DependencyWriter
    * @see DependencyCollector#JSON_FILENAME
    */
-  private final DependencyWriter writer;
+  @NotNull private final DependencyWriter writer;
 
   DependencyCollector(
-      final MavenProject project,
-      final DependencyRecordConverter recordFactory,
-      final DependencyWriter writer) {
+      @NotNull final MavenProject project,
+      @NotNull final DependencyRecordConverter converter,
+      @NotNull final DependencyWriter writer) {
     this.project = project;
-    this.recordFactory = recordFactory;
+    this.recordFactory = converter;
     this.writer = writer;
   }
 
@@ -84,6 +85,7 @@ class DependencyCollector {
    * @see DependencyRecord
    * @see DependencyRecordConverter
    */
+  @NotNull
   protected Set<DependencyRecord> getDependencies() throws PluginException {
     var dependenciesDirect = project.getDependencies();
 
@@ -96,7 +98,7 @@ class DependencyCollector {
     var dependencies =
         Stream.of(dependenciesDirect, dependenciesManaged)
             .flatMap(Collection::stream)
-            .map(recordFactory::create)
+            .map(recordFactory::convert)
             .collect(Collectors.toCollection(LinkedHashSet::new));
 
     writer.writeNewFile(JSON_FILENAME, dependencies);

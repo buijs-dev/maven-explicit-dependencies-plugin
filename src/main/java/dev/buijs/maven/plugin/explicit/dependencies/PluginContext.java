@@ -20,30 +20,90 @@
  */
 package dev.buijs.maven.plugin.explicit.dependencies;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Optional;
+import java.util.Set;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class PluginContext {
 
-  final DependencyRecordConverter factory;
-  final DependencyWriter writer;
-  final DependencyCollector dependenciesCollector;
-  final DependencyTreeCollector dependencyTreeCollector;
-  final DependencyAnalyzer dependencyAnalyzer;
+  /** The name of the directory where logging output is stored. */
+  private static final String LOG_DIRECTORY = "maven-explicit-dependencies";
 
-  public PluginContext(
-      MavenProject project, MavenSession session, DependencyGraphBuilder graphBuilder) {
+  /** The error message when creating the output directory has failed. */
+  private static final String LOG_DIRECTORY_CREATION_ERROR_MESSAGE =
+      "failed to create log directory";
 
-    this.factory = new DependencyRecordConverter();
+  /** The error message when deleting the output directory has failed. */
+  private static final String LOG_DIRECTORY_DELETION_ERROR_MESSAGE =
+      "failed to delete log directory";
 
-    this.writer = new DependencyWriter(project);
+  @NotNull private final DependencyCollector dependenciesCollector;
+  @NotNull private final DependencyTreeCollector dependencyTreeCollector;
+  @NotNull private final DependencyAnalyzer dependencyAnalyzer;
 
+  PluginContext(
+      @NotNull MavenProject project,
+      @NotNull MavenSession session,
+      @NotNull DependencyGraphBuilder graphBuilder)
+      throws PluginException {
+    @NotNull DependencyRecordConverter factory = new DependencyRecordConverter();
+    @NotNull DependencyWriter writer = new DependencyWriter(getLogDirectory(project, new IOUtil()));
     this.dependencyAnalyzer = new DependencyAnalyzer(writer);
-
     this.dependenciesCollector = new DependencyCollector(project, factory, writer);
-
     this.dependencyTreeCollector =
         new DependencyTreeCollector(project, session, graphBuilder, factory, writer);
+  }
+
+  /**
+   * Create log directory in the maven project build directory.
+   *
+   * @param project which is being analyzed and where the log should be stored.
+   * @return path to the log directory.
+   * @throws PluginException when deleting the existing log directory or creating the new directory
+   *     failed.
+   * @see PluginContext#LOG_DIRECTORY_CREATION_ERROR_MESSAGE
+   * @see PluginContext#LOG_DIRECTORY_DELETION_ERROR_MESSAGE
+   */
+  @NotNull
+  private static Path getLogDirectory(@NotNull MavenProject project, @Nullable IOUtil ioUtilOrNull)
+      throws PluginException {
+    var ioUtil = Optional.ofNullable(ioUtilOrNull).orElse(new IOUtil());
+    var buildDirectory = project.getBuild().getDirectory();
+    var path = ioUtil.toPath(buildDirectory).resolve(LOG_DIRECTORY);
+    if (ioUtil.exists(path)) {
+      try {
+        ioUtil.delete(path.toFile());
+      } catch (IOException e) {
+        throw new PluginException(e, LOG_DIRECTORY_DELETION_ERROR_MESSAGE);
+      }
+    }
+
+    try {
+      return ioUtil.create(path);
+    } catch (IOException e) {
+      throw new PluginException(e, LOG_DIRECTORY_CREATION_ERROR_MESSAGE);
+    }
+  }
+
+  @NotNull
+  Set<DependencyRecord> getDependencies() throws PluginException {
+    return dependenciesCollector.getDependencies();
+  }
+
+  @NotNull
+  Set<DependencyRecord> getDependenciesFromTree() throws PluginException {
+    return dependencyTreeCollector.getDependencies();
+  }
+
+  @NotNull
+  Set<DependencyRecord> getMissingExplicitDependencies() throws PluginException {
+    return dependencyAnalyzer.getMissingExplicitDependencies(
+        getDependencies(), getDependenciesFromTree());
   }
 }

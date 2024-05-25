@@ -64,7 +64,7 @@ class PluginMojoSpec extends Specification {
 
         then:
         PluginException e = thrown()
-        e.message == "missing explicit dependencies"
+        e.message == "fix this error by adding all missing dependencies to your pom explicitly"
     }
 
     def "Verify plugin execution is successful when there is no missing dependency"() {
@@ -81,6 +81,42 @@ class PluginMojoSpec extends Specification {
 
         then:
         1 * log.info("dependency-tree is fully explicit")
+    }
+
+    def "Verify plugin execution is successful when dependencies are missing but force is false"() {
+        given:
+        def log = Mock(Log)
+        def project = projectStub
+        def session = Stub(MavenSession)
+        def graphBuilder = Stub(DependencyGraphBuilder) {
+            it.buildDependencyGraph(_ as ProjectBuildingRequest, null) >> Stub(DependencyNode) {
+                it.accept(_ as DependencyNodeVisitor) >> {
+                    //multiple visitor passes, so need to check if this is the correct one
+                    //noinspection GroovyAssignabilityCheck
+                    def visitor = arguments[0].getDependencyNodeVisitor()
+                    if (visitor instanceof DependencyTreeNodeVisitor) {
+                        def record = new DependencyRecord("foo.groupie", "bar", "1.2.3")
+                        //noinspection GroovyAccessibility
+                        visitor.collection.add(record)
+                    }
+                }
+            }
+        }
+
+        and:
+        def mojo = new PluginMojo(project: project,
+                session: session,
+                dependencyGraphBuilder: graphBuilder,
+                force: false)
+
+        and:
+        mojo.log = log
+
+        when:
+        mojo.execute()
+
+        then:
+        1 * log.warn("missing explicit dependencies: \n -  foo.groupie.bar:1.2.3")
     }
 
     // Test Class for easier mocking/stubbing.

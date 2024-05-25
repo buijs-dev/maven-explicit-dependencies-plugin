@@ -23,25 +23,27 @@ package dev.buijs.maven.plugin.explicit.dependencies;
 import java.util.List;
 import org.apache.maven.shared.dependency.graph.DependencyNode;
 import org.apache.maven.shared.dependency.graph.traversal.DependencyNodeVisitor;
+import org.jetbrains.annotations.NotNull;
 
 class DependencyTreeNodeVisitor implements DependencyNodeVisitor {
 
-  private final List<DependencyRecord> collection;
-  private final DependencyRecordConverter recordFactory;
+  @NotNull private final List<DependencyRecord> collection;
+
+  @NotNull private final DependencyRecordConverter converter;
 
   DependencyTreeNodeVisitor(
-      List<DependencyRecord> collection, DependencyRecordConverter recordFactory) {
+      @NotNull List<DependencyRecord> collection, @NotNull DependencyRecordConverter converter) {
     this.collection = collection;
-    this.recordFactory = recordFactory;
+    this.converter = converter;
   }
 
-  public boolean visit(DependencyNode node) {
-    this.collection.add(recordFactory.create(node.getArtifact()));
+  public boolean visit(@NotNull DependencyNode node) {
+    this.collection.add(converter.convert(node.getArtifact()));
     return true;
   }
 
   @Override
-  public boolean endVisit(DependencyNode dependencyNode) {
+  public boolean endVisit(@NotNull DependencyNode dependencyNode) {
     return true;
   }
 }

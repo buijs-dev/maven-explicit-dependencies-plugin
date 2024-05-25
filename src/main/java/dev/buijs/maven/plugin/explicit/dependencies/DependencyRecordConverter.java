@@ -22,15 +22,36 @@ package dev.buijs.maven.plugin.explicit.dependencies;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Dependency;
+import org.jetbrains.annotations.NotNull;
 
+/**
+ * Utility to convert org.apache.maven.artifact.Artifact and org.apache.maven.model.Dependency to
+ * DependencyRecord.
+ *
+ * @see DependencyRecord
+ */
 public class DependencyRecordConverter {
 
-  DependencyRecord create(Artifact artifact) {
+  /**
+   * Convert org.apache.maven.artifact.Artifact to DependencyRecord.
+   *
+   * @param artifact org.apache.maven.artifact.Artifact.
+   * @return DependencyRecord.
+   */
+  @NotNull
+  DependencyRecord convert(@NotNull Artifact artifact) {
     return new DependencyRecord(
         artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion());
   }
 
-  DependencyRecord create(Dependency dependency) {
+  /**
+   * Convert org.apache.maven.model.Dependency to DependencyRecord.
+   *
+   * @param dependency org.apache.maven.model.Dependency.
+   * @return DependencyRecord.
+   */
+  @NotNull
+  DependencyRecord convert(@NotNull Dependency dependency) {
     return new DependencyRecord(
         dependency.getGroupId(), dependency.getArtifactId(), dependency.getVersion());
   }

@@ -23,6 +23,7 @@ package dev.buijs.maven.plugin.explicit.dependencies;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Utility to find all transitive dependencies which are not explicitly added to the maven project.
@@ -49,7 +50,7 @@ public class DependencyAnalyzer {
    */
   private final DependencyWriter writer;
 
-  DependencyAnalyzer(DependencyWriter writer) {
+  DependencyAnalyzer(@NotNull DependencyWriter writer) {
     this.writer = writer;
   }
 
@@ -64,8 +65,10 @@ public class DependencyAnalyzer {
    * @return Set of DependencyRecord containing all transitive dependencies that are not explicitly
    *     added to the maven pom.
    */
+  @NotNull
   Set<DependencyRecord> getMissingExplicitDependencies(
-      Set<DependencyRecord> explicitDependencies, Set<DependencyRecord> implicitDependencies)
+      @NotNull Set<DependencyRecord> explicitDependencies,
+      @NotNull Set<DependencyRecord> implicitDependencies)
       throws PluginException {
     var dependencies =
         implicitDependencies.stream()

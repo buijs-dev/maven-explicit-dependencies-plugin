@@ -31,18 +31,20 @@ import org.jetbrains.annotations.NotNull;
  * @param version the dependency version (format major.minor.patch 1.0.0 or with suffix
  *     1.0.0-SNAPSHOT etc.)
  */
-public record DependencyRecord(String groupId, String artifactId, String version)
+public record DependencyRecord(
+    @NotNull String groupId, @NotNull String artifactId, @NotNull String version)
     implements Comparable<DependencyRecord> {
 
   /**
    * Compare logic to order a collection of records alphabetically and then from newest to oldest
-   * version. <br/>
+   * version. <br>
+   *
    * @see DependencyRecord.INNER#compareByVersion(String, String)
    * @param other the object to be compared.
    * @return int (negative) number of priority.
    */
   @Override
-  public int compareTo(DependencyRecord other) {
+  public int compareTo(@NotNull DependencyRecord other) {
     int groupCompare = this.groupId.compareTo(other.groupId);
     if (groupCompare != 0) {
       return groupCompare;
@@ -104,13 +106,13 @@ public record DependencyRecord(String groupId, String artifactId, String version
                 + ">.*)$");
 
     /**
-     * Compare two dependency versions where the newest version has higher priority.
-     * Versions without suffix are preferred.
-     * E.g. when comparing 1.0.2 and 1.0.2-SNAPSHOT, 1.0.2 is given a higher priority than 1.0.2-SNAPSHOT.
+     * Compare two dependency versions where the newest version has higher priority. Versions
+     * without suffix are preferred. E.g. when comparing 1.0.2 and 1.0.2-SNAPSHOT, 1.0.2 is given a
+     * higher priority than 1.0.2-SNAPSHOT.
+     *
      * @see DependencyRecord#compareTo
      */
-    private static int compareByVersion(@NotNull String thisVersion,
-                                        @NotNull String otherVersion) {
+    private static int compareByVersion(@NotNull String thisVersion, @NotNull String otherVersion) {
       var thisVersionMatcher = INNER.SEMANTIC_VERSION_PATTERN.matcher(thisVersion);
       var thisIsSemanticallyVersioned = thisVersionMatcher.find();
       if (!thisIsSemanticallyVersioned) {
@@ -124,7 +126,7 @@ public record DependencyRecord(String groupId, String artifactId, String version
       }
 
       var thisVersionWithoutSuffix =
-              thisVersionMatcher.group(SEMANTIC_VERSION_PATTERN_GROUP_VERSION);
+          thisVersionMatcher.group(SEMANTIC_VERSION_PATTERN_GROUP_VERSION);
 
       var otherVersionWithoutSuffix =
           otherVersionMatcher.group(SEMANTIC_VERSION_PATTERN_GROUP_VERSION);
@@ -147,9 +149,9 @@ public record DependencyRecord(String groupId, String artifactId, String version
       return otherSuffixOrNull.compareTo(thisSuffixOrNull);
     }
 
+    @NotNull
     private static String toJson(@NotNull DependencyRecord record) {
       return JSON_TEMPLATE.formatted(record.groupId, record.artifactId, record.version);
     }
   }
-
 }

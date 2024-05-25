@@ -20,6 +20,8 @@
  */
 package dev.buijs.maven.plugin.explicit.dependencies;
 
+import java.util.Set;
+import java.util.function.Function;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.Component;
@@ -28,9 +30,31 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
+import org.jetbrains.annotations.NotNull;
 
 @Mojo(name = "compile", defaultPhase = LifecyclePhase.COMPILE)
 public class PluginMojo extends AbstractMojo {
+
+  /** The message logged when all dependencies are explicit. */
+  private static final String INFO_SUCCESS_MESSAGE = "dependency-tree is fully explicit";
+
+  /** The message logged when not all dependencies are explicit. */
+  private static final String WARN_MISSING_EXPLICITS_MESSAGE = "missing explicit dependencies: %s";
+
+  /** The exception message when not all dependencies are explicit. */
+  private static final String EXCEPTION_MISSING_EXPLICITS_MESSAGE =
+      "fix this error by adding all missing dependencies to your pom explicitly";
+
+  /** Serialization template to pretty print dependency records. */
+  private static final String PRETTY_PRINT_TEMPLATE = "%s.%s:%s";
+
+  private static final Function<DependencyRecord, String> prettyPrint =
+      dependency ->
+          String.format(
+              PRETTY_PRINT_TEMPLATE,
+              dependency.groupId(),
+              dependency.artifactId(),
+              dependency.version());
 
   @Component DependencyGraphBuilder dependencyGraphBuilder;
 
@@ -46,24 +70,48 @@ public class PluginMojo extends AbstractMojo {
   @Override
   public void execute() throws PluginException {
     var context = new PluginContext(project, session, dependencyGraphBuilder);
-
-    var dependencies = context.dependenciesCollector.getDependencies();
-
-    var dependencyTree = context.dependencyTreeCollector.getDependencies();
-
-    var dependenciesMissing =
-        context.dependencyAnalyzer.getMissingExplicitDependencies(dependencies, dependencyTree);
-
-    if (dependenciesMissing.isEmpty()) {
-      getLog().info("dependency-tree is fully explicit");
+    var dependencies = context.getMissingExplicitDependencies();
+    if (dependencies.isEmpty()) {
+      onSuccess();
     } else {
-      getLog().warn("missing explicit dependencies: " + dependenciesMissing);
-      if (force) {
-        var msg = "missing explicit dependencies";
-        var description =
-            "fix this error by adding all missing dependencies to your pom explicitly";
-        throw new PluginException(dependenciesMissing, msg, description);
-      }
+      onFailure(dependencies);
     }
+  }
+
+  /**
+   * Log success message when all dependencies are explicit.
+   *
+   * @see PluginMojo#INFO_SUCCESS_MESSAGE
+   */
+  private void onSuccess() {
+    getLog().info(INFO_SUCCESS_MESSAGE);
+  }
+
+  /**
+   * Log warning message when not all dependencies are explicit.
+   *
+   * @see PluginMojo#WARN_MISSING_EXPLICITS_MESSAGE
+   * @param dependencies the implicit dependencies that should be added explicitly.
+   * @throws PluginException when {@link PluginMojo#force} is set to true.
+   */
+  private void onFailure(@NotNull Set<DependencyRecord> dependencies) throws PluginException {
+    var prettyPrinted = prettyPrint(dependencies);
+    var warning = String.format(WARN_MISSING_EXPLICITS_MESSAGE, prettyPrinted);
+    getLog().warn(warning);
+    if (force) {
+      throw new PluginException(dependencies, EXCEPTION_MISSING_EXPLICITS_MESSAGE);
+    }
+  }
+
+  private String prettyPrint(@NotNull Set<DependencyRecord> dependencies) {
+    var builder = new StringBuilder();
+    dependencies.stream()
+        .map(prettyPrint)
+        .forEach(
+            (str) -> {
+              builder.append("\n -  ");
+              builder.append(str);
+            });
+    return builder.toString();
   }
 }

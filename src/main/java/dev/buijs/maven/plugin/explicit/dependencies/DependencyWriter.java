@@ -23,42 +23,26 @@ package dev.buijs.maven.plugin.explicit.dependencies;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.apache.maven.project.MavenProject;
+import org.jetbrains.annotations.NotNull;
 
 public class DependencyWriter {
 
-  private final MavenProject project;
+  @NotNull private final Path outputDirectory;
 
-  DependencyWriter(MavenProject project) {
-    this.project = project;
+  DependencyWriter(@NotNull Path outputDirectory) {
+    this.outputDirectory = outputDirectory;
   }
 
-  void writeNewFile(final String filename, final Object content) throws PluginException {
-    var json = getLogDirectory().resolve(filename).toAbsolutePath();
+  void writeNewFile(@NotNull final String filename, @NotNull final Object content)
+      throws PluginException {
+    var json = outputDirectory.resolve(filename).toAbsolutePath();
 
     try {
       //noinspection ResultOfMethodCallIgnored
       json.toFile().createNewFile();
       Files.writeString(json, content.toString());
     } catch (IOException e) {
-      throw new PluginException(e, "failed to write log files", "");
+      throw new PluginException(e, "failed to write log files");
     }
-  }
-
-  private Path getLogDirectory() throws PluginException {
-    var dir = getBuildDirectory().resolve("maven-explicit-dependencies");
-    if (Files.exists(dir)) {
-      return dir;
-    }
-
-    try {
-      return Files.createDirectory(dir);
-    } catch (IOException e) {
-      throw new PluginException(e, "failed to create log directory", "");
-    }
-  }
-
-  private Path getBuildDirectory() {
-    return Path.of(project.getBuild().getDirectory());
   }
 }
