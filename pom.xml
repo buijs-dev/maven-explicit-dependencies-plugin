@@ -5,7 +5,7 @@
     <groupId>dev.buijs.maven</groupId>
     <artifactId>explicit-dependencies-maven-plugin</artifactId>
     <packaging>maven-plugin</packaging>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>explicit-dependencies-maven-plugin Maven Mojo</name>
     <description>Maven plugin to force transitive dependencies to be explicitly declared.</description>
     <url>https://github.com/buijs-dev/maven-explicit-dependencies-plugin</url>

@@ -3,8 +3,6 @@
 [![codecov](https://codecov.io/gh/buijs-dev/maven-explicit-dependencies-plugin/graph/badge.svg?token=Bz9XcQYruX)](https://codecov.io/gh/buijs-dev/maven-explicit-dependencies-plugin)
 [![GitHub](https://img.shields.io/github/license/buijs-dev/maven-explicit-dependencies-plugin?color=black)](https://github.com/buijs-dev/maven-explicit-dependencies-plugin/blob/main/LICENSE)
 
-> Unreleased... checkout and build locally to try.
-
 # maven-explicit-dependencies-plugin
 Maven plugin to force transitive dependencies to be explicitly declared.
 
